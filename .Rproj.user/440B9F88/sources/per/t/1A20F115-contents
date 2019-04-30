@@ -1,0 +1,116 @@
+source("tb_functions.R")
+library(smooth)
+library(wktmo)
+
+# get reproductive numbers
+dat = readCDCData('../data/cdc/case_date_all.csv')
+dat = dat[dat$epiweek != '09W52',]
+dat$weeknum = dat$weeknum-1
+
+# smooth data
+smooth.dat.2 = sma(dat$cases)
+smooth.dat.2
+dat$cases.smooth = as.vector(smooth.dat.2$fitted)
+head(dat)
+
+rts = findRts2(dat$cases.smooth)
+
+plot(rts$rts, type='l')
+lines(rts$date[54:314], rts$rts[54:314], col='red')
+
+# set up necessary info
+R.raw = rts$rts                          # reproductive numbers
+#R.start = mean(R.raw[53:104])            # R to use for every week of first (uncertain) year
+#R = c(rep(R.start, 52), R.raw[53:418])   # Rs to use for bootstrapping
+R.start = R.raw[53:104]
+R = c(R.start, R.raw[53:418])
+n.start = dat$cases.smooth[dat$weeknum==1]      # number of cases on first week of 2010
+N.true = dat$cases.smooth[dat$weeknum<53]       # cases for first year
+
+shape = 1.47                         # shape param for SI dist
+rate = 0.04529                       # rate param for SI dist
+ps = getPs(shape, rate, k=100)       # discrete gamma distribution
+
+set.seed(1234)
+
+# get 100 bootstrap samples
+all.iter = data.frame(matrix(ncol=100, nrow=length(R)+100))
+for(j in 1:100){
+  N = c(N.true, rep(0, length(R)-52+100))
+  for(i in 1:length(R)){
+    Ni = sum(rpois(N[i], R[i]))                                        # number of people infected by those from time i
+    t.infect = c(rep(0, i), as.vector(rmultinom(1, Ni, ps)))           # list of how many people infected at what time
+    
+    if(i < 53){
+      t.infect.full = c(rep(0,52), t.infect[53:length(t.infect)], rep(0, length(N)-length(t.infect)))
+    } else {
+      t.infect.full = c(t.infect, rep(0, length(N)-length(t.infect)))  # make it the same length as N
+    }
+    
+    N = N + t.infect.full
+  }
+  all.iter[j] = N
+}
+
+# plot first 10 samples against actual data
+library(RColorBrewer)
+library(scales)
+colors = brewer.pal(10, 'Spectral')
+plot(all.iter[[1]], type='l', col=alpha(colors[1], 0.5))
+for(i in 2:10){
+  lines(all.iter[[i]], col=alpha(colors[i], 0.5))
+}
+lines(dat$cases.smooth)
+
+
+# find Rts for all the bootstrap samples (about 1 min to run)
+Rts.100 = data.frame(matrix(ncol=100, nrow=518))
+for(i in 1:100){
+  rep.num = findRts2(all.iter[[i]])
+  Rts.100[i] = rep.num$rts
+}
+
+
+# plot first 10 against 'true' reproductive numbers
+plot(rts$rts[53:313], type='l')
+for(i in 1:10){
+  lines(Rts.100[[i]][53:313], col=alpha(colors[i], 0.5))
+}
+
+# get 95% interval - data between 2.5th percentile and 97.5th percentile
+ci = data.frame(matrix(ncol=2, nrow=518))
+for(i in 1:518){
+   rowi = as.numeric(Rts.100[i,])
+   bottom = quantile(rowi, 0.025)
+   top = quantile(rowi, 0.975)
+   ci[i,1] = bottom
+   ci[i,2] = top
+}
+colnames(ci) = c('lower','upper')
+
+
+# cut off: first two years and last few years so include: 2012, 2013, 2014, 2015
+rts.final = rts$rts[105:313]
+lower.final = ci$lower[105:313]
+upper.final = ci$upper[105:313]
+weeks = rts$date[105:313]
+
+# plot reproductive numbers and confidence intervals for relevant time
+plot(weeks, rts.final, type='l', main = 'TB Reproductive Number', xlab='Year', ylab='Reproductive Number', xaxt='n', xaxs='i')
+lines(weeks, lower.final, col='#4eb3d3')
+lines(weeks, upper.final, col='#4eb3d3')
+polygon(c(weeks, rev(weeks)), c(upper.final, rev(lower.final)), col=alpha('#7bccc4', 0.4), border=NA)
+axis(side=1, seq(105, 313, 52), c(2012, 2013, 2014, 2015, 2016))
+
+
+#########################################################################################
+### Using smoothed weekly counts, convert data to monthly, then get bootstrap samples ###
+#########################################################################################
+
+cases.month = ceiling(weekToMonth(dat$cases, 2010, wkIndex=1, wkMethod = "epiSun")$value)
+cases.month = head(cases.month, length(cases.month)-3)
+months = seq(1, length(cases.month))
+
+plot(x=months, y=cases.month, type='l', xlab='Year', ylab='Cases (per month)',
+     main = 'Cases of TB in the US (Monthly Data)', xaxt='n')
+axis(side=1, seq(1, length(months), 12), c(2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017))

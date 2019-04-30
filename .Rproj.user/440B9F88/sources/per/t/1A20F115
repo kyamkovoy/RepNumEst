@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1556209590037.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3096183426",
+    "id" : "1A20F115",
+    "lastKnownWriteTime" : 1556123042,
+    "last_content_update" : 1556123042,
+    "path" : "C:/School/TB_Research/code/ci_test.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "0,18",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

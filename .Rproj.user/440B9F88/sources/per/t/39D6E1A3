@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1556199521174.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "0|66|49|0|\n52|68|100|0|\n103|32|169|0|\n173|65|235|0|\n",
+    "hash" : "545205292",
+    "id" : "39D6E1A3",
+    "lastKnownWriteTime" : 1556199416,
+    "last_content_update" : -2147483648,
+    "path" : "C:/School/TB_Research/code/RepNumEst/R/find_rts.R",
+    "project_path" : "R/find_rts.R",
+    "properties" : {
+        "cursorPosition" : "9,26",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
