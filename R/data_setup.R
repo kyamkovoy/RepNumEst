@@ -7,8 +7,6 @@ read_cdc_data <- function(data_to_read, region = FALSE){
   #' @param region \code{TRUE} if incorporating interaction between regions,
   #'   \code{FALSE} otherwise.
   #' @return Dataframe with cleaned up CDC data.
-  #' @examples dat <- read_cdc_data("D:/School/TB_Research/data/cdc_cases.csv",
-  #'   region = FALSE)
   #' @section Warning:
   #' Data must contain 'cases' column and have time as the first column.
 
